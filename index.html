@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Source Items — Quote Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F3; --surface:#FFFFFF; --surface-alt:#EDEFEA; --border:#DCDFD9;
+    --ink:#1B2420; --ink-soft:#5B6560; --ink-faint:#8B948E;
+    --accent:#0F6E5C; --accent-dark:#0B5245; --accent-soft:#E3F0EC;
+    --risk:#B3261E; --risk-soft:#FBE7E5;
+    --radius-lg:14px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;font-size:17px;}
+  .app{max-width:1140px;margin:0 auto;padding:36px 26px 100px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:16px;}
+  .brand{display:flex;align-items:center;gap:13px;}
+  .brand .mark{width:40px;height:40px;border-radius:11px;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+  .brand .mark svg{width:21px;height:21px;}
+  .brand h1{font-size:23px;font-weight:600;margin:0;letter-spacing:-0.01em;}
+  .brand p{margin:0;font-size:15px;color:var(--ink-faint);}
+  .nav-link{font-size:16px;color:var(--ink-soft);text-decoration:none;border:1px solid var(--border);padding:10px 16px;border-radius:var(--radius-sm);}
+  .nav-link:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .file-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .ghost-btn{background:transparent;border:1px solid var(--border);color:var(--ink-soft);padding:10px 16px;border-radius:var(--radius-sm);font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;}
+  .ghost-btn:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;}
+  .panel-head h2{font-size:22px;font-weight:600;margin:0;}
+  .panel-sub{font-size:16px;color:var(--ink-faint);margin:4px 0 24px;line-height:1.5;}
+  .rate-bar{display:flex;align-items:center;gap:24px;flex-wrap:wrap;background:var(--surface-alt);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:24px;}
+  .item-card{border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:20px;overflow:hidden;}
+  .item-card-head{display:flex;align-items:center;justify-content:space-between;background:var(--surface-alt);padding:14px 18px;}
+  .item-card-head .tag{font-size:15px;font-weight:600;color:var(--ink-faint);}
+  .icon-btn{background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:6px 8px;font-size:15px;font-family:inherit;border-radius:6px;}
+  .icon-btn:hover{color:var(--risk);background:var(--risk-soft);}
+  .item-body{padding:20px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:15px;font-weight:600;color:var(--ink-soft);}
+  .field input, .field select, .field textarea{
+    border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;font-size:18px;
+    font-family:inherit;color:var(--ink);background:#fff;width:100%;
+  }
+  .field textarea{resize:vertical;min-height:90px;line-height:1.5;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+  .lead-time-combo{display:flex;gap:8px;}
+  .lead-time-combo input{flex:1 1 70px;}
+  .lead-time-combo select{flex:1.2 1 110px;}
+
+  .attach-block{margin-bottom:16px;}
+  .attach-block > label{font-size:15px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;}
+  .attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .attach-row{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;background:#FCFDFC;}
+  .attach-row .info{display:flex;align-items:center;gap:10px;font-size:15px;}
+  .attach-row .info .fname{font-weight:600;color:var(--ink);}
+  .attach-row .info .fsize{color:var(--ink-faint);font-size:13.5px;}
+  .attach-row a{color:var(--accent-dark);text-decoration:none;font-weight:600;font-size:14.5px;}
+  .attach-row a:hover{text-decoration:underline;}
+  .attach-actions{display:flex;align-items:center;gap:14px;}
+  .attach-btn{
+    display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--border);background:none;
+    color:var(--accent-dark);font-weight:600;font-size:15px;padding:10px 16px;border-radius:var(--radius-sm);
+    cursor:pointer;font-family:inherit;
+  }
+  .attach-btn:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .attach-hint{font-size:13px;color:var(--ink-faint);margin-top:6px;}
+
+  .option-block{border:1px dashed var(--border);border-radius:var(--radius-sm);padding:18px;margin-bottom:14px;background:#FCFDFC;}
+  .option-block-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .option-block-head .opt-name{font-size:16px;font-weight:600;color:var(--ink-soft);}
+  .option-grid-row{display:grid;grid-template-columns:1.3fr 0.8fr 1fr 1fr;gap:14px;margin-bottom:12px;}
+  .option-grid-row2{display:grid;grid-template-columns:0.8fr 1.1fr 0.8fr 0.8fr;gap:14px;margin-bottom:12px;}
+  @media(max-width:900px){.option-grid-row,.option-grid-row2{grid-template-columns:1fr 1fr;}}
+
+  .add-link{
+    display:inline-flex;align-items:center;gap:8px;background:none;border:1px dashed var(--border);
+    color:var(--accent-dark);font-weight:600;font-size:16px;padding:12px 16px;border-radius:var(--radius-sm);
+    cursor:pointer;font-family:inherit;width:100%;justify-content:center;
+  }
+  .add-link:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .add-item-btn{background:var(--accent);color:#fff;border:none;padding:15px 24px;border-radius:var(--radius-sm);font-weight:600;font-size:18px;cursor:pointer;font-family:inherit;}
+  .add-item-btn:hover{background:var(--accent-dark);}
+  .empty{text-align:center;padding:70px 26px;color:var(--ink-faint);}
+  .empty p{margin:0 0 22px;font-size:17px;}
+  .nav-row{display:flex;justify-content:space-between;margin-top:28px;}
+  .primary-btn{background:var(--accent);color:#fff;border:none;padding:16px 30px;border-radius:var(--radius-sm);font-weight:600;font-size:19px;cursor:pointer;font-family:inherit;}
+  .primary-btn:hover{background:var(--accent-dark);}
+  .primary-btn:disabled{background:var(--ink-faint);cursor:not-allowed;}
+  .secondary-btn{background:#fff;color:var(--ink-soft);border:1px solid var(--border);padding:15px 26px;border-radius:var(--radius-sm);font-weight:600;font-size:18px;cursor:pointer;font-family:inherit;}
+  .secondary-btn:hover{border-color:var(--ink-soft);}
+  .success-panel{text-align:center;padding:68px 40px;}
+  .success-panel .check{width:75px;height:75px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:35px;}
+  .success-panel h2{margin:0 0 8px;font-size:24px;}
+  .success-panel p{margin:0 0 30px;color:var(--ink-soft);font-size:17px;}
+  #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:34px;font-size:16px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:50;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  footer.foot{text-align:center;margin-top:36px;font-size:14.5px;color:var(--ink-faint);}
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 12l5-5M4 12l5 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><h1>Source Items</h1><p>Step 1 of the quote workflow</p></div>
+    </div>
+    <div class="file-actions">
+      <a class="nav-link" href="./queue.html">Go to pricing queue &rarr;</a>
+      <a class="nav-link" href="./export.html">Daily export</a>
+      <button class="ghost-btn" id="btnLoad">Load saved draft</button>
+      <button class="ghost-btn" id="btnSave">Save draft</button>
+      <input type="file" id="fileInput" accept="application/json">
+    </div>
+  </header>
+
+  <div id="content"></div>
+  <footer class="foot">Submitting sends this to the shared pricing queue — it's no longer only on this computer once submitted.</footer>
+</div>
+<div id="toast"></div>
+
+<script>
+let state = { sourcedBy: '', items: [] };
+let submitted = null; // holds {id, itemCount} after a successful submit
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function newItem(){
+  return { id: uid(), part:'', description:'', weight:'', partHistory:'',
+    lastSellPrice:'', lastBuyPrice:'', lastPriceCurrency:'USD',
+    attachments:[], options:[newOption()] };
+}
+function newOption(){
+  return {
+    id: uid(), vendor:'', currency:'USD', price:'', shipping:'',
+    leadTimeValue:'', leadTimeUnit:'Week(s)', leadTime:'',
+    minOrder:'', ncnr:'No', vendorNotes:''
+  };
+}
+const CURRENCIES = ['USD','CAD','EUR','GBP','JPY','AUD','CHF'];
+const LEAD_TIME_UNITS = ['Day(s)','Week(s)','Month(s)'];
+const MAX_FILE_BYTES = 3.5 * 1024 * 1024;
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1024*1024) return (n/1024).toFixed(1)+' KB';
+  return (n/(1024*1024)).toFixed(2)+' MB';
+}
+function recalcLeadTime(opt){
+  opt.leadTime = opt.leadTimeValue ? `${opt.leadTimeValue} ${opt.leadTimeUnit}` : '';
+}
+
+function render(){
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  if(submitted){ c.appendChild(renderSuccess()); return; }
+  c.appendChild(renderForm());
+}
+
+function renderSuccess(){
+  const wrap = document.createElement('div');
+  wrap.className='panel success-panel';
+  wrap.innerHTML = `
+    <div class="check">&#10003;</div>
+    <h2>Sent to the pricing queue</h2>
+    <p>${submitted.itemCount} item${submitted.itemCount>1?'s':''} submitted by ${escapeHtml(state.sourcedBy)}. A markup person will pick it up from the queue.</p>
+  `;
+  const btn = document.createElement('button');
+  btn.className='primary-btn';
+  btn.textContent='Submit another batch';
+  btn.onclick = ()=>{
+    submitted = null;
+    state = { sourcedBy: state.sourcedBy, items: [] };
+    render();
+  };
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function renderForm(){
+  const wrap = document.createElement('div');
+  const panel = document.createElement('div');
+  panel.className='panel';
+  panel.innerHTML = `
+    <div class="panel-head"><h2>Sourced items</h2></div>
+    <p class="panel-sub">Add each part you're sourcing. If you found more than one vendor for the same part, add every option — the pricing team will pick the best one.</p>
+  `;
+
+  const signBar = document.createElement('div');
+  signBar.className='rate-bar';
+  const sf = fieldInput('Sourced by (your name)', state.sourcedBy, v=>{ state.sourcedBy=v; }, 'text', 'global-sourcedby');
+  sf.style.flex='0 0 320px';
+  signBar.appendChild(sf);
+  panel.appendChild(signBar);
+
+  if(state.items.length===0){
+    const empty = document.createElement('div');
+    empty.className='empty';
+    empty.innerHTML = `<p>No items yet.</p>`;
+    const btn = document.createElement('button');
+    btn.className='add-item-btn';
+    btn.textContent='+ Add first item';
+    btn.onclick = ()=>{ state.items.push(newItem()); render(); };
+    empty.appendChild(btn);
+    panel.appendChild(empty);
+  } else {
+    state.items.forEach((item, idx)=>{ panel.appendChild(renderItemCard(item, idx)); });
+    const addBtn = document.createElement('button');
+    addBtn.className='add-item-btn';
+    addBtn.textContent='+ Add another item';
+    addBtn.onclick = ()=>{ state.items.push(newItem()); render(); };
+    panel.appendChild(addBtn);
+  }
+  wrap.appendChild(panel);
+
+  const canSubmit = state.items.length>0 && state.items.every(it=>it.options.some(o=>o.vendor && o.price!=='')) && state.sourcedBy.trim()!=='';
+  const nav = document.createElement('div');
+  nav.className='nav-row';
+  nav.appendChild(document.createElement('div'));
+  const submitBtn = document.createElement('button');
+  submitBtn.className='primary-btn';
+  submitBtn.textContent='Submit for pricing';
+  submitBtn.disabled = !canSubmit;
+  submitBtn.onclick = submitBatch;
+  nav.appendChild(submitBtn);
+  wrap.appendChild(nav);
+
+  return wrap;
+}
+
+function renderItemCard(item, idx){
+  const card = document.createElement('div');
+  card.className='item-card';
+  const head = document.createElement('div');
+  head.className='item-card-head';
+  head.innerHTML = `<span class="tag">Item ${idx+1}</span>`;
+  const rm = document.createElement('button');
+  rm.className='icon-btn';
+  rm.textContent='Remove item';
+  rm.onclick = ()=>{ state.items = state.items.filter(i=>i.id!==item.id); render(); };
+  head.appendChild(rm);
+  card.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className='item-body';
+  const row1 = document.createElement('div');
+  row1.className='field-row';
+  row1.style.gridTemplateColumns='1.3fr 1.3fr 0.7fr';
+  row1.appendChild(fieldInput('Part number', item.part, v=>{item.part=v;}, 'text', `item-${item.id}-part`));
+  row1.appendChild(fieldInput('Description / manufacturer', item.description, v=>{item.description=v;}, 'text', `item-${item.id}-desc`));
+  row1.appendChild(fieldInput('Weight', item.weight, v=>{item.weight=v;}, 'text', `item-${item.id}-weight`));
+  body.appendChild(row1);
+
+  const row2 = document.createElement('div');
+  row2.className='field-row';
+  row2.style.gridTemplateColumns='1fr';
+  row2.appendChild(fieldTextarea('Part history', item.partHistory, v=>{item.partHistory=v;}, `item-${item.id}-history`, 'Prior orders, known issues, past pricing, anything worth knowing about this part…'));
+  body.appendChild(row2);
+
+  const rowPrice = document.createElement('div');
+  rowPrice.className='field-row';
+  rowPrice.style.gridTemplateColumns='1fr 1fr 0.7fr';
+  rowPrice.appendChild(fieldInput('Last sell price', item.lastSellPrice, v=>{item.lastSellPrice=v;}, 'number', `item-${item.id}-lastsell`));
+  rowPrice.appendChild(fieldInput('Last buy price', item.lastBuyPrice, v=>{item.lastBuyPrice=v;}, 'number', `item-${item.id}-lastbuy`));
+  rowPrice.appendChild(fieldSelect('Currency', item.lastPriceCurrency, CURRENCIES, v=>{item.lastPriceCurrency=v;}, `item-${item.id}-lastcurrency`));
+  body.appendChild(rowPrice);
+
+  body.appendChild(renderAttachBlock(item));
+
+  item.options.forEach((opt, oi)=>{ body.appendChild(renderOptionBlock(item, opt, oi)); });
+
+  const addOpt = document.createElement('button');
+  addOpt.className='add-link';
+  addOpt.textContent='+ Add another vendor option for this item';
+  addOpt.onclick = ()=>{ item.options.push(newOption()); render(); };
+  body.appendChild(addOpt);
+
+  card.appendChild(body);
+  return card;
+}
+
+function renderAttachBlock(item){
+  const wrap = document.createElement('div');
+  wrap.className='attach-block';
+  const label = document.createElement('label');
+  label.textContent = 'Attachments (spec sheets, customer files, etc.)';
+  wrap.appendChild(label);
+
+  if(item.attachments.length>0){
+    const list = document.createElement('div');
+    list.className='attach-list';
+    item.attachments.forEach(att=>{
+      const row = document.createElement('div');
+      row.className='attach-row';
+      row.innerHTML = `
+        <div class="info">
+          <span class="fname">${escapeHtml(att.filename)}</span>
+          <span class="fsize">${fmtBytes(att.size)}</span>
+        </div>
+      `;
+      const actions = document.createElement('div');
+      actions.className='attach-actions';
+      const viewLink = document.createElement('a');
+      viewLink.href = `/api/attachment-get?id=${encodeURIComponent(att.fileId)}`;
+      viewLink.target = '_blank';
+      viewLink.rel = 'noopener';
+      viewLink.textContent = 'View';
+      actions.appendChild(viewLink);
+      const rmBtn = document.createElement('button');
+      rmBtn.className='icon-btn';
+      rmBtn.textContent='Remove';
+      rmBtn.onclick = ()=>{ item.attachments = item.attachments.filter(a=>a.fileId!==att.fileId); render(); };
+      actions.appendChild(rmBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  }
+
+  const btn = document.createElement('button');
+  btn.className='attach-btn';
+  btn.type='button';
+  btn.textContent='+ Attach file';
+  const fileInput = document.createElement('input');
+  fileInput.type='file';
+  fileInput.multiple = true;
+  fileInput.onchange = async (e)=>{
+    const files = Array.from(e.target.files || []);
+    for(const file of files){
+      await uploadAttachment(item, file);
+    }
+    fileInput.value='';
+  };
+  btn.onclick = ()=>fileInput.click();
+  wrap.appendChild(btn);
+  wrap.appendChild(fileInput);
+
+  const hint = document.createElement('div');
+  hint.className='attach-hint';
+  hint.textContent = 'Max 3.5MB per file.';
+  wrap.appendChild(hint);
+
+  return wrap;
+}
+
+async function uploadAttachment(item, file){
+  if(file.size > MAX_FILE_BYTES){
+    toast(`"${file.name}" is too large — max 3.5MB per file`);
+    return;
+  }
+  toast(`Uploading "${file.name}"…`);
+  try{
+    const dataBase64 = await new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const res = await fetch('/api/attachment-upload', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filename: file.name, contentType: file.type, dataBase64 })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Upload failed');
+    item.attachments.push({ fileId: data.fileId, filename: data.filename, size: data.size, contentType: data.contentType });
+    toast(`"${file.name}" attached`);
+    render();
+  }catch(err){
+    toast(`Could not attach "${file.name}": ` + err.message);
+  }
+}
+
+function renderOptionBlock(item, opt, oi){
+  const block = document.createElement('div');
+  block.className='option-block';
+  const head = document.createElement('div');
+  head.className='option-block-head';
+  head.innerHTML = `<span class="opt-name">Option ${oi+1}</span>`;
+  if(item.options.length>1){
+    const rm = document.createElement('button');
+    rm.className='icon-btn';
+    rm.textContent='Remove';
+    rm.onclick = ()=>{ item.options = item.options.filter(o=>o.id!==opt.id); render(); };
+    head.appendChild(rm);
+  }
+  block.appendChild(head);
+
+  const rowA = document.createElement('div');
+  rowA.className='option-grid-row';
+  rowA.appendChild(fieldInput('Vendor', opt.vendor, v=>{opt.vendor=v;}, 'text', `opt-${opt.id}-vendor`));
+  rowA.appendChild(fieldSelect('Currency', opt.currency, CURRENCIES, v=>{opt.currency=v;}, `opt-${opt.id}-currency`));
+  rowA.appendChild(fieldInput('Price', opt.price, v=>{opt.price=v;}, 'number', `opt-${opt.id}-price`));
+  rowA.appendChild(fieldInput('Shipping', opt.shipping, v=>{opt.shipping=v;}, 'number', `opt-${opt.id}-shipping`));
+  block.appendChild(rowA);
+
+  const rowB = document.createElement('div');
+  rowB.className='option-grid-row2';
+
+  const leadField = document.createElement('div');
+  leadField.className='field';
+  const leadLabel = document.createElement('label');
+  leadLabel.textContent = 'Lead time';
+  leadField.appendChild(leadLabel);
+  const leadCombo = document.createElement('div');
+  leadCombo.className='lead-time-combo';
+  const leadNumInput = document.createElement('input');
+  leadNumInput.type='number'; leadNumInput.step='any'; leadNumInput.min='0';
+  leadNumInput.value = opt.leadTimeValue ?? '';
+  leadNumInput.placeholder='7';
+  leadNumInput.dataset.key = `opt-${opt.id}-leadtimeval`;
+  leadNumInput.oninput = (e)=>{ opt.leadTimeValue = e.target.value; recalcLeadTime(opt); rerenderKeepFocus(); };
+  leadCombo.appendChild(leadNumInput);
+  const leadUnitSelect = document.createElement('select');
+  leadUnitSelect.dataset.key = `opt-${opt.id}-leadtimeunit`;
+  LEAD_TIME_UNITS.forEach(u=>{
+    const o = document.createElement('option');
+    o.value=u; o.textContent=u;
+    if(u===opt.leadTimeUnit) o.selected=true;
+    leadUnitSelect.appendChild(o);
+  });
+  leadUnitSelect.onchange = (e)=>{ opt.leadTimeUnit = e.target.value; recalcLeadTime(opt); rerenderKeepFocus(); };
+  leadCombo.appendChild(leadUnitSelect);
+  leadField.appendChild(leadCombo);
+  rowB.appendChild(leadField);
+
+  rowB.appendChild(fieldInput('Min order', opt.minOrder, v=>{opt.minOrder=v;}, 'text', `opt-${opt.id}-minorder`));
+  rowB.appendChild(fieldSelect('NCNR', opt.ncnr, ['No','Yes'], v=>{opt.ncnr=v;}, `opt-${opt.id}-ncnr`));
+  block.appendChild(rowB);
+
+  const notesRow = document.createElement('div');
+  notesRow.className='field-row';
+  notesRow.style.gridTemplateColumns='1fr';
+  notesRow.appendChild(fieldTextarea('Vendor notes', opt.vendorNotes, v=>{opt.vendorNotes=v;}, `opt-${opt.id}-notes`, 'Anything the vendor mentioned with their price — stock caveats, substitutions, conditions, etc.'));
+  block.appendChild(notesRow);
+
+  return block;
+}
+
+function fieldInput(label, value, onChange, type='text', key=null){
+  const f = document.createElement('div');
+  f.className='field';
+  const l = document.createElement('label');
+  l.textContent = label;
+  const i = document.createElement('input');
+  i.type = type;
+  if(type==='number') i.step='any';
+  i.value = value ?? '';
+  if(key) i.dataset.key = key;
+  i.oninput = (e)=>{ onChange(e.target.value); rerenderKeepFocus(); };
+  f.appendChild(l); f.appendChild(i);
+  return f;
+}
+function fieldSelect(label, value, options, onChange, key=null){
+  const f = document.createElement('div');
+  f.className='field';
+  const l = document.createElement('label');
+  l.textContent = label;
+  const s = document.createElement('select');
+  if(key) s.dataset.key = key;
+  options.forEach(o=>{
+    const opt = document.createElement('option');
+    opt.value=o; opt.textContent=o;
+    if(o===value) opt.selected=true;
+    s.appendChild(opt);
+  });
+  s.onchange = (e)=>{ onChange(e.target.value); rerenderKeepFocus(); };
+  f.appendChild(l); f.appendChild(s);
+  return f;
+}
+function fieldTextarea(label, value, onChange, key=null, placeholder=''){
+  const f = document.createElement('div');
+  f.className='field';
+  const l = document.createElement('label');
+  l.textContent = label;
+  const t = document.createElement('textarea');
+  t.value = value ?? '';
+  t.placeholder = placeholder;
+  if(key) t.dataset.key = key;
+  t.oninput = (e)=>{ onChange(e.target.value); rerenderKeepFocus(); };
+  f.appendChild(l); f.appendChild(t);
+  return f;
+}
+function cssEscapeKey(s){ return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/[^a-zA-Z0-9_-]/g,'\\$&'); }
+function rerenderKeepFocus(){
+  const active = document.activeElement;
+  const key = active && active.dataset ? active.dataset.key : null;
+  let selStart=null, selEnd=null;
+  if(key && typeof active.selectionStart === 'number'){ selStart = active.selectionStart; selEnd = active.selectionEnd; }
+  render();
+  if(key){
+    const el = document.querySelector(`[data-key="${cssEscapeKey(key)}"]`);
+    if(el){
+      el.focus();
+      if(selStart!==null && typeof el.setSelectionRange === 'function'){
+        try{ el.setSelectionRange(selStart, selEnd); }catch(err){}
+      }
+    }
+  }
+}
+
+async function submitBatch(){
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try{
+    const res = await fetch('/api/submissions-create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sourcedBy: state.sourcedBy.trim(), sourcedAt: Date.now(), items: state.items })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Submission failed'); }
+    submitted = { id: data.id, itemCount: state.items.length };
+    render();
+  }catch(err){
+    toast('Could not submit: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Submit for pricing';
+  }
+}
+
+document.getElementById('btnSave').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sourcing-draft.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Draft saved');
+};
+document.getElementById('btnLoad').onclick = ()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange = (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const loaded = JSON.parse(ev.target.result);
+      if(loaded && Array.isArray(loaded.items)){
+        loaded.items.forEach(it=>{
+          if(it.partHistory===undefined) it.partHistory='';
+          if(it.lastSellPrice===undefined) it.lastSellPrice='';
+          if(it.lastBuyPrice===undefined) it.lastBuyPrice='';
+          if(it.lastPriceCurrency===undefined) it.lastPriceCurrency='USD';
+          if(!Array.isArray(it.attachments)) it.attachments=[];
+          (it.options||[]).forEach(o=>{
+            if(o.vendorNotes===undefined) o.vendorNotes='';
+            if(o.leadTimeValue===undefined) o.leadTimeValue='';
+            if(o.leadTimeUnit===undefined) o.leadTimeUnit='Week(s)';
+          });
+        });
+        state = loaded;
+        render();
+        toast('Draft loaded');
+      } else { toast('That file doesn\'t look right'); }
+    }catch(err){ toast('Could not read that file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Export — Quote Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F6F3; --surface:#FFFFFF; --surface-alt:#EDEFEA; --border:#DCDFD9;
+    --ink:#1B2420; --ink-soft:#5B6560; --ink-faint:#8B948E;
+    --accent:#0F6E5C; --accent-dark:#0B5245; --accent-soft:#E3F0EC;
+    --risk:#B3261E; --risk-soft:#FBE7E5;
+    --radius-lg:10px; --radius-sm:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;}
+  .num{font-family:'IBM Plex Mono',monospace;}
+  .app{max-width:900px;margin:0 auto;padding:28px 20px 80px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+  .brand .mark svg{width:16px;height:16px;}
+  .brand h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-0.01em;}
+  .brand p{margin:0;font-size:12px;color:var(--ink-faint);}
+  .nav-link{font-size:12.5px;color:var(--ink-soft);text-decoration:none;border:1px solid var(--border);padding:7px 12px;border-radius:var(--radius-sm);}
+  .nav-link:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .file-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;}
+  .panel-head h2{font-size:16px;font-weight:600;margin:0;}
+  .panel-sub{font-size:12.5px;color:var(--ink-faint);margin:2px 0 18px;}
+  .filter-bar{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;background:var(--surface-alt);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:20px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11.5px;font-weight:600;color:var(--ink-soft);}
+  .field input{border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13.5px;font-family:inherit;color:var(--ink);background:#fff;}
+  .primary-btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit;}
+  .primary-btn:hover{background:var(--accent-dark);}
+  .primary-btn:disabled{background:var(--ink-faint);cursor:not-allowed;}
+  .ghost-btn{background:transparent;border:1px solid var(--border);color:var(--ink-soft);padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .ghost-btn:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .summary-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat{background:var(--surface-alt);border-radius:var(--radius-sm);padding:14px 18px;flex:1;min-width:140px;}
+  .stat .n{font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+  .stat .l{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-faint);border-bottom:1px solid var(--border);padding:8px 10px;}
+  td{padding:9px 10px;border-bottom:1px solid var(--surface-alt);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;}
+  .status-pill .dot{width:6px;height:6px;border-radius:50%;}
+  .status-pill.completed{background:var(--accent-soft);color:var(--accent-dark);}
+  .status-pill.completed .dot{background:var(--accent);}
+  .status-pill.pending{background:var(--surface-alt);color:var(--ink-faint);}
+  .status-pill.pending .dot{background:var(--ink-faint);}
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-faint);font-size:13.5px;}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:50;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  footer.foot{text-align:center;margin-top:30px;font-size:11.5px;color:var(--ink-faint);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 12l5-5M4 12l5 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><h1>Daily Export</h1><p>Vendor & quote pricing, by part number</p></div>
+    </div>
+    <div class="file-actions">
+      <a class="nav-link" href="./index.html">Source items</a>
+      <a class="nav-link" href="./queue.html">Pricing queue</a>
+    </div>
+  </header>
+
+  <div id="content"></div>
+  <footer class="foot">One PDF per part number is generated fresh at export time — nothing is stored here between exports.</footer>
+</div>
+<div id="toast"></div>
+
+<script>
+let currentDate = new Date().toISOString().slice(0,10);
+let submissions = [];
+let loading = false;
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+const CCY_SYMBOL = {USD:'$', CAD:'$', EUR:'€', GBP:'£', JPY:'¥', AUD:'$', CHF:'CHF '};
+function fmtMoney(n, ccy){
+  if(n===null || n===undefined || n==='' || isNaN(n)) return '—';
+  const s = Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  return (CCY_SYMBOL[ccy]||'') + s + ' ' + ccy;
+}
+function convert(amount, from, to, rates){
+  if(amount===null || amount===undefined || amount==='' || isNaN(amount)) return null;
+  amount = Number(amount);
+  if(from===to) return amount;
+  const rateOf = c => c==='USD' ? 1 : (rates[c] ?? 1);
+  const amountInUsd = amount / rateOf(from);
+  return amountInUsd * rateOf(to);
+}
+function selectedOption(item){
+  return (item.options||[]).find(o=>o.id===item.selectedOptionId) || null;
+}
+function computeLine(item, submission){
+  const opt = selectedOption(item);
+  if(!opt || opt.price==='' || opt.price===null) return null;
+  const buyPrice = Number(opt.price);
+  const buyShip = opt.shipping ? Number(opt.shipping) : 0;
+  const totalBuy = buyPrice + buyShip;
+  const rates = submission.rates || {};
+  const customerCurrency = submission.customerCurrency || opt.currency;
+  const convertedBuy = convert(totalBuy, opt.currency, customerCurrency, rates);
+  const hasMarkup = (item.markupType==='percent' && item.markupPct!==null && item.markupPct!==undefined) ||
+                     (item.markupType==='dollar' && item.markupDollar!==null && item.markupDollar!==undefined && item.markupDollar!=='');
+  if(!hasMarkup) return {opt, totalBuy, sell:null};
+  const markedUp = item.markupType==='percent'
+    ? convertedBuy * (1+item.markupPct)
+    : convertedBuy + Number(item.markupDollar);
+  const customShip = item.customShipping ? Number(item.customShipping) : 0;
+  const sell = markedUp + customShip;
+  return {opt, totalBuy, sell, customerCurrency};
+}
+
+function dayBounds(dateStr){
+  const start = new Date(dateStr + 'T00:00:00');
+  const end = new Date(dateStr + 'T23:59:59.999');
+  return { from: start.getTime(), to: end.getTime() };
+}
+
+async function loadDay(date){
+  loading = true;
+  render();
+  try{
+    const { from, to } = dayBounds(date);
+    const res = await fetch(`/api/submissions-list?from=${from}&to=${to}`);
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Failed to load');
+    submissions = data.submissions || [];
+  }catch(err){
+    toast('Could not load: ' + err.message);
+    submissions = [];
+  }
+  loading = false;
+  render();
+}
+
+function allParts(){
+  const rows = [];
+  submissions.forEach(sub=>{
+    (sub.items||[]).forEach(item=>{
+      rows.push({ item, sub });
+    });
+  });
+  return rows;
+}
+
+function render(){
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  const panel = document.createElement('div');
+  panel.className='panel';
+  panel.innerHTML = `<div class="panel-head"><h2>Export by day</h2></div>
+    <p class="panel-sub">Pick a date, see what was sourced and priced that day, then export every part as one PDF each in a single zip.</p>`;
+
+  const bar = document.createElement('div');
+  bar.className='filter-bar';
+  const df = document.createElement('div');
+  df.className='field';
+  df.innerHTML = `<label>Date</label>`;
+  const dateInput = document.createElement('input');
+  dateInput.type='date';
+  dateInput.value = currentDate;
+  dateInput.onchange = (e)=>{ currentDate = e.target.value; loadDay(currentDate); };
+  df.appendChild(dateInput);
+  bar.appendChild(df);
+
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className='ghost-btn';
+  refreshBtn.textContent = loading ? 'Loading…' : 'Refresh';
+  refreshBtn.disabled = loading;
+  refreshBtn.onclick = ()=>loadDay(currentDate);
+  bar.appendChild(refreshBtn);
+
+  const rows = allParts();
+  const exportBtn = document.createElement('button');
+  exportBtn.className='primary-btn';
+  exportBtn.style.marginLeft='auto';
+  exportBtn.textContent = `Export ${currentDate} as ZIP`;
+  exportBtn.disabled = rows.length===0 || loading;
+  exportBtn.onclick = exportDayAsZip;
+  bar.appendChild(exportBtn);
+  panel.appendChild(bar);
+
+  if(loading){
+    const empty = document.createElement('div');
+    empty.className='empty';
+    empty.textContent='Loading…';
+    panel.appendChild(empty);
+    c.appendChild(panel);
+    return;
+  }
+
+  if(rows.length===0){
+    const empty = document.createElement('div');
+    empty.className='empty';
+    empty.textContent='Nothing sourced on this date.';
+    panel.appendChild(empty);
+    c.appendChild(panel);
+    return;
+  }
+
+  const completedCount = rows.filter(r=>r.sub.status==='completed').length;
+  const summary = document.createElement('div');
+  summary.className='summary-row';
+  summary.innerHTML = `
+    <div class="stat"><div class="n">${rows.length}</div><div class="l">Parts sourced</div></div>
+    <div class="stat"><div class="n">${completedCount}</div><div class="l">Already priced</div></div>
+    <div class="stat"><div class="n">${rows.length-completedCount}</div><div class="l">Still pending</div></div>
+  `;
+  panel.appendChild(summary);
+
+  const table = document.createElement('table');
+  table.innerHTML = `<tr><th>Part #</th><th>Description</th><th>Status</th><th>Sourced by</th><th>Priced by</th></tr>`;
+  rows.forEach(({item, sub})=>{
+    const tr = document.createElement('tr');
+    const statusClass = sub.status==='completed' ? 'completed' : 'pending';
+    tr.innerHTML = `
+      <td class="num">${escapeHtml(item.part||'—')}</td>
+      <td>${escapeHtml(item.description||'—')}</td>
+      <td><span class="status-pill ${statusClass}"><span class="dot"></span>${sub.status==='completed'?'Completed':'Pending'}</span></td>
+      <td>${escapeHtml(sub.sourcedBy||'—')}</td>
+      <td>${escapeHtml(sub.pricedBy||'—')}</td>
+    `;
+    table.appendChild(tr);
+  });
+  panel.appendChild(table);
+
+  c.appendChild(panel);
+}
+
+/* ---------------------------- per-part PDF, generated on demand ---------------------------- */
+function buildPartRecordPDF(item, sub, dateStr){
+  if(!window.jspdf) return null;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'letter'});
+  const marginX = 50;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  let y = 56;
+  function ensureSpace(extra){ if(y + extra > pageH - 50){ doc.addPage(); y = 56; } }
+  function heading(text){
+    ensureSpace(26);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10.5);
+    doc.setTextColor(91,101,96);
+    doc.text(text.toUpperCase(), marginX, y);
+    y += 8;
+    doc.setDrawColor(220,223,217);
+    doc.line(marginX, y, pageW-marginX, y);
+    y += 16;
+    doc.setTextColor(27,36,32);
+  }
+  function kv(label, value){
+    ensureSpace(16);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    doc.setTextColor(91,101,96);
+    doc.text(String(label), marginX, y);
+    doc.setTextColor(27,36,32);
+    doc.setFont('helvetica','bold');
+    doc.text(String(value), pageW - marginX, y, {align:'right'});
+    y += 16;
+  }
+
+  const isCompleted = sub.status === 'completed';
+  const line = isCompleted ? computeLine(item, sub) : null;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(17);
+  doc.setTextColor(27,36,32);
+  doc.text('Part Pricing Record', marginX, y);
+  y += 18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.setTextColor(91,101,96);
+  doc.text('Generated ' + new Date().toLocaleString(), marginX, y);
+  y += 24;
+  doc.setTextColor(27,36,32);
+
+  heading('Item');
+  kv('Part #', item.part || '—');
+  kv('Description', item.description || '—');
+  kv('Status', isCompleted ? 'Completed' : 'Pending');
+  y += 6;
+
+  heading('Sourcing');
+  kv('Sourced by', sub.sourcedBy || '—');
+  kv('Date sourced', dateStr);
+  y += 6;
+
+  const opts = (item.options||[]).filter(o=>o.vendor && o.price!=='');
+  ensureSpace(16);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.setTextColor(91,101,96);
+  doc.text('Vendor', marginX, y);
+  doc.text('Price', marginX+150, y);
+  doc.text('Shipping', marginX+250, y);
+  doc.text('Lead time', marginX+350, y);
+  doc.text('NCNR', marginX+460, y);
+  y += 6;
+  doc.setDrawColor(220,223,217);
+  doc.line(marginX, y, pageW-marginX, y);
+  y += 12;
+  doc.setTextColor(27,36,32);
+  opts.forEach(o=>{
+    ensureSpace(16);
+    const chosen = o.id===item.selectedOptionId;
+    doc.setFont('helvetica', chosen?'bold':'normal'); doc.setFontSize(9.5);
+    doc.text((chosen?'\u2713 ':'') + o.vendor, marginX, y);
+    doc.text(fmtMoney(o.price, o.currency), marginX+150, y);
+    doc.text(o.shipping? fmtMoney(o.shipping,o.currency) : '—', marginX+250, y);
+    doc.text(o.leadTime || '—', marginX+350, y);
+    doc.text(o.ncnr==='Yes' ? 'Yes' : 'No', marginX+460, y);
+    y += 15;
+  });
+  y += 14;
+
+  if(isCompleted && line){
+    heading('Pricing');
+    kv('Priced by', sub.pricedBy || '—');
+    const markupDesc = item.markupType==='percent'
+      ? `${Math.round(item.markupPct*100)}%`
+      : fmtMoney(item.markupDollar, sub.customerCurrency)+' flat';
+    kv('Markup applied', markupDesc);
+    kv('Buy price', line.opt ? fmtMoney(line.totalBuy, line.opt.currency) : '—');
+    kv('Sell price', line.sell!==null ? fmtMoney(line.sell, sub.customerCurrency) : '—');
+  }
+
+  return doc;
+}
+
+/* ---------------------------- zip (dependency-free) ---------------------------- */
+function crc32(bytes){
+  if(!crc32.table){
+    const t = [];
+    for(let n=0;n<256;n++){
+      let c=n;
+      for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+      t[n] = c >>> 0;
+    }
+    crc32.table = t;
+  }
+  let crc = 0 ^ (-1);
+  for(let i=0;i<bytes.length;i++){ crc = (crc >>> 8) ^ crc32.table[(crc ^ bytes[i]) & 0xFF]; }
+  return (crc ^ (-1)) >>> 0;
+}
+function makeZip(files){
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+  const now = new Date();
+  const dosTime = ((now.getHours()<<11) | (now.getMinutes()<<5) | (now.getSeconds()>>1)) & 0xFFFF;
+  const dosDate = (((now.getFullYear()-1980)<<9) | ((now.getMonth()+1)<<5) | now.getDate()) & 0xFFFF;
+  const encoder = new TextEncoder();
+
+  files.forEach(f=>{
+    const nameBytes = encoder.encode(f.name);
+    const dataBytes = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
+    const crc = crc32(dataBytes);
+    const size = dataBytes.length;
+
+    const lh = new Uint8Array(30 + nameBytes.length);
+    const ldv = new DataView(lh.buffer);
+    ldv.setUint32(0, 0x04034b50, true);
+    ldv.setUint16(4, 20, true);
+    ldv.setUint16(6, 0, true);
+    ldv.setUint16(8, 0, true);
+    ldv.setUint16(10, dosTime, true);
+    ldv.setUint16(12, dosDate, true);
+    ldv.setUint32(14, crc, true);
+    ldv.setUint32(18, size, true);
+    ldv.setUint32(22, size, true);
+    ldv.setUint16(26, nameBytes.length, true);
+    ldv.setUint16(28, 0, true);
+    lh.set(nameBytes, 30);
+    localParts.push(lh, dataBytes);
+
+    const ch = new Uint8Array(46 + nameBytes.length);
+    const cdv = new DataView(ch.buffer);
+    cdv.setUint32(0, 0x02014b50, true);
+    cdv.setUint16(4, 20, true);
+    cdv.setUint16(6, 20, true);
+    cdv.setUint16(8, 0, true);
+    cdv.setUint16(10, 0, true);
+    cdv.setUint16(12, dosTime, true);
+    cdv.setUint16(14, dosDate, true);
+    cdv.setUint32(16, crc, true);
+    cdv.setUint32(20, size, true);
+    cdv.setUint32(24, size, true);
+    cdv.setUint16(28, nameBytes.length, true);
+    cdv.setUint16(30, 0, true);
+    cdv.setUint16(32, 0, true);
+    cdv.setUint16(34, 0, true);
+    cdv.setUint16(36, 0, true);
+    cdv.setUint32(38, 0, true);
+    cdv.setUint32(42, offset, true);
+    ch.set(nameBytes, 46);
+    centralParts.push(ch);
+
+    offset += lh.length + dataBytes.length;
+  });
+
+  const centralSize = centralParts.reduce((a,p)=>a+p.length,0);
+  const centralOffset = offset;
+  const end = new Uint8Array(22);
+  const edv = new DataView(end.buffer);
+  edv.setUint32(0, 0x06054b50, true);
+  edv.setUint16(8, files.length, true);
+  edv.setUint16(10, files.length, true);
+  edv.setUint32(12, centralSize, true);
+  edv.setUint32(16, centralOffset, true);
+
+  return new Blob([...localParts, ...centralParts, end], {type:'application/zip'});
+}
+
+async function exportDayAsZip(){
+  const rows = allParts();
+  if(rows.length===0) return;
+  if(!window.jspdf){ toast('PDF support is still loading — try again in a second'); return; }
+
+  toast(`Generating ${rows.length} record${rows.length>1?'s':''}…`);
+  const usedNames = new Set();
+  const files = [];
+  rows.forEach(({item, sub})=>{
+    try{
+      const doc = buildPartRecordPDF(item, sub, currentDate);
+      if(!doc) return;
+      const bytes = new Uint8Array(doc.output('arraybuffer'));
+      let name = `${item.part||'item'}_${currentDate}.pdf`.replace(/[^a-zA-Z0-9_.-]+/g,'-');
+      let n=2;
+      while(usedNames.has(name)){ name = `${item.part||'item'}_${currentDate}-${n}.pdf`.replace(/[^a-zA-Z0-9_.-]+/g,'-'); n++; }
+      usedNames.add(name);
+      files.push({name, data: bytes});
+    }catch(err){
+      console.error('Failed to build PDF for', item.part, err);
+    }
+  });
+
+  if(files.length===0){ toast('Could not generate any records'); return; }
+  const zipBlob = makeZip(files);
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `part-records_${currentDate}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Downloaded ${files.length} records as one zip`);
+}
+
+loadDay(currentDate);
+</script>
+</body>
+</html>
