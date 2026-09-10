@@ -1,0 +1,22 @@
+{
+  "name": "quote-builder",
+  "compatibility_date": "2026-09-01",
+  "main": "src/index.js",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "quote-builder-db",
+      "database_id": "0760f58f-59f6-4b6e-b013-77c61baa56bf"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "quote-builder-attachments"
+    }
+  ]
+}
